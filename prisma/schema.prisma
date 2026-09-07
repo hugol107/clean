@@ -1,0 +1,709 @@
+// CleanTap — Prisma schema
+// Multi-tenant NFC-based cleaning operations platform.
+//
+// Design notes (see /docs/architecture.md for the full write-up):
+// - Tenant isolation: every operational row carries `organizationId` directly
+//   (denormalized) so every query can filter/index on it without joins.
+// - Location "status" (Clean / Due Soon / Overdue / ...) is NEVER stored.
+//   It is computed on read from the last CleaningSession + SLA settings
+//   (see src/server/services/sla.ts). This avoids stale cached state.
+// - Soft delete: reference/config entities use `isActive` instead of hard
+//   deletes so history (sessions, audit logs) never dangles.
+// - Concurrency safety for Tap In: `ActiveLocationLock` uses `locationId` as
+//   a primary key, so the database itself rejects a second concurrent
+//   "start cleaning" on the same location (unique constraint violation),
+//   instead of relying on a check-then-insert race.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum OrgRole {
+  ORG_ADMIN
+  SITE_MANAGER
+  SUPERVISOR
+  CLEANER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum OrgPlan {
+  STARTER
+  BUSINESS
+  ENTERPRISE
+}
+
+enum LocationType {
+  HOTEL_ROOM
+  RESTROOM
+  LOBBY
+  OFFICE
+  KITCHEN
+  COMMON_AREA
+  CHANGING_ROOM
+  CUSTOM
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  FLAGGED
+}
+
+enum TapMethod {
+  NFC
+  QR
+  MANUAL
+  ADMIN
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ISSUE
+  OVERDUE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum RecurrenceType {
+  NONE
+  INTERVAL_MINUTES
+  DAILY
+  WEEKLY
+}
+
+enum ChecklistItemType {
+  CHECKBOX
+  YES_NO
+  TEXT
+  NUMBER
+  PHOTO
+}
+
+enum IssueType {
+  SUPPLY_MISSING
+  MAINTENANCE
+  DAMAGE
+  LOST_ITEM
+  EXCESSIVE_DIRT
+  BLOCKED_ACCESS
+  SECURITY
+  OTHER
+}
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IssueStatus {
+  OPEN
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  DISMISSED
+}
+
+enum NfcTagStatus {
+  UNASSIGNED
+  ACTIVE
+  DISABLED
+  REPLACED
+}
+
+enum LocationVerification {
+  OFF
+  OPTIONAL
+  REQUIRED
+}
+
+enum NotificationType {
+  ISSUE_REPORTED
+  TASK_OVERDUE
+  LOCATION_OVERDUE
+  SESSION_EXCEEDED
+  SYSTEM
+}
+
+enum AttachmentType {
+  ISSUE_PHOTO
+  SESSION_PHOTO
+  LABEL
+  OTHER
+}
+
+// ---------------------------------------------------------------------------
+// Identity & Auth (NextAuth / Auth.js compatible)
+// ---------------------------------------------------------------------------
+
+model User {
+  id                       String    @id @default(cuid())
+  email                    String    @unique
+  emailVerified            DateTime?
+  passwordHash             String?
+  name                     String
+  image                    String?
+  isSuperAdmin             Boolean   @default(false)
+  lastActiveOrganizationId String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  memberships     OrganizationMembership[]
+  employeeProfile EmployeeProfile?
+  auditLogs       AuditLog[]               @relation("AuditActor")
+  notifications   Notification[]
+  accounts        Account[]
+  sessions        Session[]
+  reportedIssues  Issue[]                  @relation("IssueReporter")
+  resolvedIssues  Issue[]                  @relation("IssueResolver")
+  createdTasks    CleaningTask[]           @relation("TaskCreator")
+  uploadedFiles   Attachment[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Tenancy: Organization -> Site -> Area -> Location
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id   String  @id @default(cuid())
+  name String
+  slug String  @unique
+  plan OrgPlan @default(STARTER)
+
+  logoUrl  String?
+  timezone String  @default("Europe/Madrid")
+
+  // Cleaning rules / privacy configuration (Settings > Cleaning Rules / Privacy)
+  locationVerification        LocationVerification @default(OFF)
+  allowMultipleActiveSessions Boolean              @default(false)
+  dueSoonThresholdPercent     Int                  @default(75)
+  dataRetentionDays           Int                  @default(365)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships        OrganizationMembership[]
+  sites              Site[]
+  locations          Location[]
+  nfcTags            NFCTag[]
+  employeeProfiles   EmployeeProfile[]
+  cleaningSessions   CleaningSession[]
+  cleaningTasks      CleaningTask[]
+  checklistTemplates ChecklistTemplate[]
+  issues             Issue[]
+  attachments        Attachment[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+
+  @@index([slug])
+}
+
+model OrganizationMembership {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrgRole
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  siteAssignments MembershipSiteAssignment[]
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+/// Scopes SITE_MANAGER / SUPERVISOR memberships to one or more sites.
+/// ORG_ADMIN implicitly sees every site in the organization (no rows needed).
+model MembershipSiteAssignment {
+  id           String @id @default(cuid())
+  membershipId String
+  siteId       String
+
+  membership OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  site       Site                   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, siteId])
+  @@index([siteId])
+}
+
+model Site {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  address        String?
+  city           String?
+  country        String?
+  timezone       String  @default("Europe/Madrid")
+
+  operatingHoursStart String @default("00:00")
+  operatingHoursEnd   String @default("23:59")
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization              Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  areas                     Area[]
+  locations                 Location[]
+  employeeProfiles          EmployeeProfile[]
+  cleaningSessions          CleaningSession[]
+  cleaningTasks             CleaningTask[]
+  issues                    Issue[]
+  membershipSiteAssignments MembershipSiteAssignment[]
+
+  @@index([organizationId])
+}
+
+model Area {
+  id        String   @id @default(cuid())
+  siteId    String
+  name      String
+  level     Int      @default(0)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  site      Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  locations Location[]
+
+  @@index([siteId])
+}
+
+model Location {
+  id             String       @id @default(cuid())
+  organizationId String
+  siteId         String
+  areaId         String?
+  name           String
+  code           String
+  type           LocationType @default(CUSTOM)
+
+  targetDurationMinutes  Int @default(15)
+  targetFrequencyMinutes Int @default(120)
+
+  // Optional per-location override; falls back to the parent Site's hours.
+  operatingHoursStart String?
+  operatingHoursEnd   String?
+
+  checklistTemplateId String?
+  isActive            Boolean  @default(true)
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site              Site               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  area              Area?              @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  checklistTemplate ChecklistTemplate? @relation(fields: [checklistTemplateId], references: [id], onDelete: SetNull)
+
+  nfcTags          NFCTag[]
+  cleaningSessions CleaningSession[]
+  cleaningTasks    CleaningTask[]
+  issues           Issue[]
+
+  @@unique([siteId, code])
+  @@index([organizationId])
+  @@index([siteId])
+  @@index([areaId])
+}
+
+// ---------------------------------------------------------------------------
+// NFC tags
+// ---------------------------------------------------------------------------
+
+model NFCTag {
+  id             String       @id @default(cuid())
+  organizationId String
+  locationId     String?
+  /// Long random, non-guessable public token used in /t/[token] URLs.
+  /// Never the same as `id` and never exposed alongside sequential data.
+  token          String       @unique
+  status         NfcTagStatus @default(UNASSIGNED)
+  label          String?
+  lastUsedAt     DateTime?
+
+  replacedByTagId String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location     Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  replacedBy   NFCTag? @relation("TagReplacement", fields: [replacedByTagId], references: [id])
+  replacedFrom NFCTag? @relation("TagReplacement")
+
+  @@index([organizationId])
+  @@index([locationId])
+}
+
+// ---------------------------------------------------------------------------
+// People
+// ---------------------------------------------------------------------------
+
+model EmployeeProfile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  organizationId String
+  siteId         String?
+  employeeCode   String?
+  jobTitle       String?
+  isActive       Boolean   @default(true)
+  hiredAt        DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site         Site?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+
+  cleaningSessions CleaningSession[]
+  assignedTasks    CleaningTask[]    @relation("AssignedEmployee")
+
+  @@index([organizationId])
+  @@index([siteId])
+}
+
+// ---------------------------------------------------------------------------
+// Core operational record
+// ---------------------------------------------------------------------------
+
+model CleaningSession {
+  id             String  @id @default(cuid())
+  organizationId String
+  siteId         String
+  locationId     String
+  employeeId     String
+  taskId         String?
+
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  durationSeconds Int?
+
+  status      SessionStatus @default(ACTIVE)
+  startMethod TapMethod     @default(NFC)
+  endMethod   TapMethod?
+
+  startLatitude  Float?
+  startLongitude Float?
+  endLatitude    Float?
+  endLongitude   Float?
+
+  notes           String?
+  flagReason      String?
+  cancelledReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site         Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  location     Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  employee     EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  task         CleaningTask?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  checklistResponses ChecklistResponse[]
+  issues             Issue[]
+  attachments        Attachment[]
+
+  @@index([organizationId])
+  @@index([siteId])
+  @@index([locationId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([locationId, status])
+  @@index([startedAt])
+  @@index([completedAt])
+}
+
+/// Mutex row: primary key on locationId guarantees the database rejects a
+/// second concurrent Tap In on the same location. Created when a session
+/// starts, deleted when it completes/cancels. Also doubles as a fast
+/// "which locations are being cleaned right now" lookup.
+model ActiveLocationLock {
+  locationId String   @id
+  sessionId  String   @unique
+  employeeId String
+  createdAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Scheduling
+// ---------------------------------------------------------------------------
+
+model CleaningTask {
+  id             String @id @default(cuid())
+  organizationId String
+  siteId         String
+  locationId     String
+
+  assignedEmployeeId        String?
+  title                     String
+  description               String?
+  priority                  TaskPriority   @default(NORMAL)
+  status                    TaskStatus     @default(PENDING)
+  dueAt                     DateTime?
+  recurrenceType            RecurrenceType @default(NONE)
+  recurrenceIntervalMinutes Int?
+  checklistTemplateId       String?
+  createdById               String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site              Site               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  location          Location           @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  assignedEmployee  EmployeeProfile?   @relation("AssignedEmployee", fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+  checklistTemplate ChecklistTemplate? @relation(fields: [checklistTemplateId], references: [id], onDelete: SetNull)
+  createdBy         User               @relation("TaskCreator", fields: [createdById], references: [id])
+
+  sessions CleaningSession[]
+
+  @@index([organizationId])
+  @@index([siteId])
+  @@index([locationId])
+  @@index([assignedEmployeeId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+// ---------------------------------------------------------------------------
+// Checklists
+// ---------------------------------------------------------------------------
+
+model ChecklistTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        ChecklistItem[]
+  locations    Location[]
+  tasks        CleaningTask[]
+
+  @@index([organizationId])
+}
+
+model ChecklistItem {
+  id                  String            @id @default(cuid())
+  checklistTemplateId String
+  label               String
+  itemType            ChecklistItemType @default(CHECKBOX)
+  isRequired          Boolean           @default(true)
+  sortOrder           Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  checklistTemplate ChecklistTemplate   @relation(fields: [checklistTemplateId], references: [id], onDelete: Cascade)
+  responses         ChecklistResponse[]
+
+  @@index([checklistTemplateId])
+}
+
+model ChecklistResponse {
+  id              String   @id @default(cuid())
+  sessionId       String
+  checklistItemId String
+  isChecked       Boolean  @default(false)
+  textValue       String?
+  numberValue     Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  session       CleaningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  checklistItem ChecklistItem   @relation(fields: [checklistItemId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, checklistItemId])
+  @@index([sessionId])
+}
+
+// ---------------------------------------------------------------------------
+// Issues
+// ---------------------------------------------------------------------------
+
+model Issue {
+  id             String  @id @default(cuid())
+  organizationId String
+  siteId         String
+  locationId     String
+  sessionId      String?
+
+  reportedByUserId String?
+  type             IssueType
+  severity         IssueSeverity @default(MEDIUM)
+  status           IssueStatus   @default(OPEN)
+  description      String
+
+  resolvedAt       DateTime?
+  resolvedByUserId String?
+  resolutionNotes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site           Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  location       Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  session        CleaningSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  reportedByUser User?            @relation("IssueReporter", fields: [reportedByUserId], references: [id])
+  resolvedByUser User?            @relation("IssueResolver", fields: [resolvedByUserId], references: [id])
+
+  attachments Attachment[]
+
+  @@index([organizationId])
+  @@index([siteId])
+  @@index([locationId])
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model Attachment {
+  id             String         @id @default(cuid())
+  organizationId String
+  issueId        String?
+  sessionId      String?
+  type           AttachmentType @default(OTHER)
+  url            String
+  storageKey     String
+  fileName       String?
+  mimeType       String?
+  sizeBytes      Int?
+
+  uploadedByUserId String?
+  createdAt        DateTime @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  issue        Issue?           @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  session      CleaningSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  uploadedBy   User?            @relation(fields: [uploadedByUserId], references: [id])
+
+  @@index([organizationId])
+  @@index([issueId])
+  @@index([sessionId])
+}
+
+// ---------------------------------------------------------------------------
+// Notifications & Audit
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  type           NotificationType
+  title          String
+  body           String
+  isRead         Boolean          @default(false)
+
+  relatedEntityType String?
+  relatedEntityId   String?
+  createdAt         DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId, isRead])
+}
+
+/// Generic append-only audit trail. Nothing in the app is allowed to
+/// silently rewrite history: edits to historical records must write a
+/// before/after pair here (see src/server/services/audit.ts).
+model AuditLog {
+  id             String  @id @default(cuid())
+  organizationId String?
+  actorUserId    String?
+  action         String
+  entityType     String
+  entityId       String
+  metadata       Json?
+  previousValue  Json?
+  newValue       Json?
+  reason         String?
+
+  createdAt DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?         @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@index([createdAt])
+}

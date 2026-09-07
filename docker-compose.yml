@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cleantap-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cleantap
+      POSTGRES_PASSWORD: cleantap
+      POSTGRES_DB: cleantap
+    ports:
+      - "5433:5432"
+    volumes:
+      - cleantap_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cleantap -d cleantap"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cleantap_db_data:

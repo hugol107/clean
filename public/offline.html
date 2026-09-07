@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>You're offline · CleanTap</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: flex; align-items: center; justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+        background: #fdfdfe; color: #171522; text-align: center; padding: 24px;
+      }
+      .card { max-width: 360px; }
+      .badge {
+        width: 56px; height: 56px; border-radius: 16px; background: #4F3CC9;
+        margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+      }
+      h1 { font-size: 18px; margin: 0 0 8px; }
+      p { font-size: 14px; color: #6b7280; line-height: 1.5; margin: 0 0 20px; }
+      button {
+        border: none; background: #4F3CC9; color: white; font-size: 14px; font-weight: 500;
+        padding: 10px 20px; border-radius: 8px; cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="badge" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="7" fill="#ffffff" />
+          <circle cx="50" cy="50" r="20" fill="none" stroke="#ffffff" stroke-width="6" opacity="0.85" />
+          <circle cx="50" cy="50" r="34" fill="none" stroke="#ffffff" stroke-width="6" opacity="0.5" />
+        </svg>
+      </div>
+      <h1>You're offline</h1>
+      <p>CleanTap needs a connection to record cleaning sessions accurately. Reconnect and try again — nothing was lost.</p>
+      <button onclick="location.reload()">Retry</button>
+    </div>
+  </body>
+</html>

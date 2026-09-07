@@ -1,0 +1,188 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.65rem;
+
+  --background: oklch(0.99 0.002 260);
+  --foreground: oklch(0.18 0.02 260);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 260);
+
+  --primary: oklch(0.47 0.19 292);
+  --primary-foreground: oklch(0.98 0.005 292);
+
+  --secondary: oklch(0.96 0.006 260);
+  --secondary-foreground: oklch(0.25 0.02 260);
+
+  --muted: oklch(0.96 0.006 260);
+  --muted-foreground: oklch(0.52 0.02 260);
+
+  --accent: oklch(0.95 0.03 292);
+  --accent-foreground: oklch(0.32 0.08 292);
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.98 0.005 27);
+
+  --border: oklch(0.91 0.006 260);
+  --input: oklch(0.91 0.006 260);
+  --ring: oklch(0.47 0.19 292);
+
+  --sidebar: oklch(0.97 0.005 260);
+  --sidebar-foreground: oklch(0.18 0.02 260);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.94 0.012 260);
+  --sidebar-accent-foreground: oklch(0.18 0.02 260);
+  --sidebar-border: oklch(0.91 0.006 260);
+  --sidebar-ring: var(--ring);
+
+  /* Semantic operational status colors — used consistently across the
+     building map, live operations table, location badges, etc. */
+  --status-clean: oklch(0.58 0.15 155);
+  --status-clean-bg: oklch(0.95 0.045 155);
+  --status-cleaning: oklch(0.55 0.18 250);
+  --status-cleaning-bg: oklch(0.95 0.035 250);
+  --status-due-soon: oklch(0.68 0.17 65);
+  --status-due-soon-bg: oklch(0.96 0.06 75);
+  --status-overdue: oklch(0.58 0.22 27);
+  --status-overdue-bg: oklch(0.95 0.045 27);
+  --status-issue: oklch(0.55 0.22 8);
+  --status-issue-bg: oklch(0.95 0.045 8);
+  --status-unavailable: oklch(0.55 0.01 260);
+  --status-unavailable-bg: oklch(0.94 0.006 260);
+}
+
+.dark {
+  --background: oklch(0.16 0.014 260);
+  --foreground: oklch(0.96 0.004 260);
+
+  --card: oklch(0.205 0.014 260);
+  --card-foreground: oklch(0.96 0.004 260);
+  --popover: oklch(0.205 0.014 260);
+  --popover-foreground: oklch(0.96 0.004 260);
+
+  --primary: oklch(0.74 0.16 292);
+  --primary-foreground: oklch(0.17 0.03 292);
+
+  --secondary: oklch(0.27 0.014 260);
+  --secondary-foreground: oklch(0.9 0.004 260);
+
+  --muted: oklch(0.27 0.014 260);
+  --muted-foreground: oklch(0.66 0.012 260);
+
+  --accent: oklch(0.32 0.05 292);
+  --accent-foreground: oklch(0.92 0.02 292);
+
+  --destructive: oklch(0.65 0.2 27);
+  --destructive-foreground: oklch(0.98 0.005 27);
+
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.74 0.16 292);
+
+  --sidebar: oklch(0.13 0.014 260);
+  --sidebar-foreground: oklch(0.94 0.004 260);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.24 0.016 260);
+  --sidebar-accent-foreground: oklch(0.94 0.004 260);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: var(--ring);
+
+  --status-clean: oklch(0.72 0.16 155);
+  --status-clean-bg: oklch(0.32 0.06 155);
+  --status-cleaning: oklch(0.72 0.14 250);
+  --status-cleaning-bg: oklch(0.32 0.06 250);
+  --status-due-soon: oklch(0.78 0.15 75);
+  --status-due-soon-bg: oklch(0.34 0.07 75);
+  --status-overdue: oklch(0.72 0.19 27);
+  --status-overdue-bg: oklch(0.34 0.09 27);
+  --status-issue: oklch(0.72 0.19 8);
+  --status-issue-bg: oklch(0.34 0.09 8);
+  --status-unavailable: oklch(0.7 0.01 260);
+  --status-unavailable-bg: oklch(0.3 0.01 260);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-status-clean: var(--status-clean);
+  --color-status-clean-bg: var(--status-clean-bg);
+  --color-status-cleaning: var(--status-cleaning);
+  --color-status-cleaning-bg: var(--status-cleaning-bg);
+  --color-status-due-soon: var(--status-due-soon);
+  --color-status-due-soon-bg: var(--status-due-soon-bg);
+  --color-status-overdue: var(--status-overdue);
+  --color-status-overdue-bg: var(--status-overdue-bg);
+  --color-status-issue: var(--status-issue);
+  --color-status-issue-bg: var(--status-issue-bg);
+  --color-status-unavailable: var(--status-unavailable);
+  --color-status-unavailable-bg: var(--status-unavailable-bg);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

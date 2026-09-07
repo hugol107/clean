@@ -1,0 +1,35 @@
+import {
+  LayoutDashboard,
+  Radio,
+  MapPin,
+  Users,
+  ListChecks,
+  AlertTriangle,
+  BarChart3,
+  FileDown,
+  Nfc,
+  Building2,
+  ClipboardList,
+  UserCog,
+  Settings,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
+import type { NavIconName } from "@/lib/nav-config";
+
+export const NAV_ICON_MAP: Record<NavIconName, LucideIcon> = {
+  LayoutDashboard,
+  Radio,
+  MapPin,
+  Users,
+  ListChecks,
+  AlertTriangle,
+  BarChart3,
+  FileDown,
+  Nfc,
+  Building2,
+  ClipboardList,
+  UserCog,
+  Settings,
+  ShieldCheck,
+};
