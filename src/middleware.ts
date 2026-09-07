@@ -34,7 +34,13 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icons/|api/auth).*)",
-  ],
+  // Excludes NextAuth's own routes, Next.js internals, and — crucially —
+  // *any* path with a file extension (icons, manifest.webmanifest, sw.js,
+  // offline.html, and future static assets like /uploads/*.jpg for locally
+  // stored issue photos). An earlier, hand-maintained list of specific
+  // filenames missed offline.html: the service worker's precache request
+  // for it was getting redirected to the login page instead of caching the
+  // real fallback page. Matching by "has a dot" is robust to that whole
+  // class of bug instead of needing every static asset named explicitly.
+  matcher: ["/((?!api/auth|_next/static|_next/image|.*\\..*).*)"],
 };

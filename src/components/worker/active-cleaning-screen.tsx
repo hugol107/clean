@@ -63,7 +63,9 @@ export function ActiveCleaningScreen({
 
   function handleFinish() {
     startTransition(async () => {
-      const geo = await requestGeolocationOnce();
+      // "OFF" means never even ask the browser for a location — see the
+      // matching comment in start-cleaning-card.tsx.
+      const geo = locationVerification === LocationVerification.OFF ? null : await requestGeolocationOnce();
       if (locationVerification === LocationVerification.REQUIRED && !geo) {
         toast.error("Location access is required by your organization. Please enable it and try again.");
         return;

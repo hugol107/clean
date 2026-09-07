@@ -4,7 +4,7 @@ import { resolveTagForTap, getLocationTapState } from "@/server/services/cleanin
 import { getOrCreateEmployeeProfile } from "@/server/services/employees";
 import { StartCleaningCard } from "@/components/worker/start-cleaning-card";
 import { OccupiedCard } from "@/components/worker/occupied-card";
-import { LocationVerification, TapMethod } from "@/generated/prisma/enums";
+import { TapMethod } from "@/generated/prisma/enums";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +52,7 @@ export default async function TapPage({
       locationType={location.type}
       siteName={location.site.name}
       targetDurationMinutes={location.targetDurationMinutes}
-      requiresGeo={location.organization.locationVerification === LocationVerification.REQUIRED}
+      locationVerification={location.organization.locationVerification}
       method={via === "qr" ? TapMethod.QR : TapMethod.NFC}
     />
   );

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { startCleaningFromTagAction } from "@/server/actions/cleaning";
 import { requestGeolocationOnce } from "@/hooks/use-geolocation";
 import { LOCATION_TYPE_LABELS } from "@/lib/constants";
+import { LocationVerification } from "@/generated/prisma/enums";
 import type { LocationType } from "@/generated/prisma/enums";
 import type { TapMethod } from "@/generated/prisma/enums";
 
@@ -17,7 +18,7 @@ export function StartCleaningCard({
   locationType,
   siteName,
   targetDurationMinutes,
-  requiresGeo,
+  locationVerification,
   method,
 }: {
   token: string;
@@ -25,7 +26,7 @@ export function StartCleaningCard({
   locationType: LocationType;
   siteName: string;
   targetDurationMinutes: number;
-  requiresGeo: boolean;
+  locationVerification: LocationVerification;
   method: TapMethod;
 }) {
   const router = useRouter();
@@ -33,8 +34,11 @@ export function StartCleaningCard({
 
   function handleStart() {
     startTransition(async () => {
-      const geo = await requestGeolocationOnce();
-      if (requiresGeo && !geo) {
+      // "OFF" means never even ask the browser for a location — not just
+      // "don't store it". Requesting it anyway would still trigger a real
+      // permission prompt on the worker's phone every time they tap in.
+      const geo = locationVerification === LocationVerification.OFF ? null : await requestGeolocationOnce();
+      if (locationVerification === LocationVerification.REQUIRED && !geo) {
         toast.error("Location access is required by your organization. Please enable it and try again.");
         return;
       }
