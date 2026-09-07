@@ -9,8 +9,5 @@ export default defineConfig({
   },
   datasource: {
     url: env("DATABASE_URL"),
-    // Only needed behind a connection pooler (Neon, Supabase's pooled port,
-    // PgBouncer…) — migrations run against the direct, unpooled connection.
-    directUrl: process.env.DIRECT_URL ? env("DIRECT_URL") : undefined,
   },
 });

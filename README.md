@@ -189,8 +189,11 @@ If port 5433 or 3000 is already taken on your machine, change the mapped port in
 
 - Create a Postgres project, copy its connection string into `DATABASE_URL`.
 - If your provider gives you both a pooled and a direct connection string (Neon's pooler, or
-  Supabase's port-6543 pooler), put the pooled one in `DATABASE_URL` and the direct one in
-  `DIRECT_URL` — `prisma.config.ts` already reads both.
+  Supabase's port-6543 pooler), use the **direct** (unpooled) one for `DATABASE_URL` — this
+  version of `prisma.config.ts` only reads a single `url`, so migrations and the app share one
+  connection string. (A separate `directUrl` for migrations is a Prisma config option in some
+  versions but isn't part of the datasource type in the exact Prisma 7.10 release pinned here;
+  revisit this if you upgrade Prisma.)
 
 **File storage — S3-compatible (Supabase Storage, AWS S3, Cloudflare R2, MinIO):**
 
