@@ -70,26 +70,42 @@ export default async function DashboardPage() {
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <KpiCard label="Cleanings completed" value={overview.totalCleanings} icon={CheckCircle2} hint="Today" />
-        <KpiCard label="Locations pending" value={pending} icon={Clock} tone={pending > 0 ? "warning" : "default"} hint={`${overdue} overdue`} />
-        <KpiCard label="Active cleanings" value={activeCleanings.length} icon={Activity} tone="default" hint="Right now" />
+        <KpiCard label="Cleanings completed" value={overview.totalCleanings} icon={CheckCircle2} tone="success" hint="Today" style={{ animationDelay: "0ms" }} />
+        <KpiCard
+          label="Locations pending"
+          value={pending}
+          icon={Clock}
+          tone={pending > 0 ? "warning" : "default"}
+          hint={`${overdue} overdue`}
+          style={{ animationDelay: "60ms" }}
+        />
+        <KpiCard label="Active cleanings" value={activeCleanings.length} icon={Activity} tone="info" hint="Right now" style={{ animationDelay: "120ms" }} />
         <KpiCard
           label="SLA compliance"
           value={`${overview.slaCompliancePercent}%`}
           icon={Gauge}
           tone={overview.slaCompliancePercent >= 90 ? "success" : overview.slaCompliancePercent >= 75 ? "warning" : "danger"}
           hint="Today"
+          style={{ animationDelay: "180ms" }}
         />
-        <KpiCard label="Avg cleaning time" value={formatDurationCompact(overview.averageDurationSeconds)} icon={Timer} hint="Today" />
+        <KpiCard
+          label="Avg cleaning time"
+          value={formatDurationCompact(overview.averageDurationSeconds)}
+          icon={Timer}
+          tone="info"
+          hint="Today"
+          style={{ animationDelay: "240ms" }}
+        />
         <KpiCard
           label="Issues open"
           value={criticalIssues.length}
           icon={AlertTriangle}
           tone={highSeverityOpen.length > 0 ? "danger" : "default"}
           hint={`${highSeverityOpen.length} high/critical`}
+          style={{ animationDelay: "300ms" }}
         />
-        <KpiCard label="Employees active" value={activeEmployeesCount} icon={Users} hint="Currently cleaning" />
-        <KpiCard label="Cleaning hours" value={`${overview.totalCleaningHours}h`} icon={MapPin} hint="Today" />
+        <KpiCard label="Employees active" value={activeEmployeesCount} icon={Users} tone="success" hint="Currently cleaning" style={{ animationDelay: "360ms" }} />
+        <KpiCard label="Cleaning hours" value={`${overview.totalCleaningHours}h`} icon={MapPin} tone="default" hint="Today" style={{ animationDelay: "420ms" }} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

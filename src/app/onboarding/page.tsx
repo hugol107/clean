@@ -14,8 +14,9 @@ export const dynamic = "force-dynamic";
 function OnboardingBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-      <div className="absolute top-[-8rem] left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/25 blur-[70px] sm:h-80 sm:w-[36rem]" />
-      <div className="bg-brand-2/20 absolute right-[-4rem] bottom-[-4rem] h-48 w-48 rounded-full blur-[70px] sm:h-64 sm:w-64" />
+      <div className="bg-dot-grid absolute inset-0 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]" />
+      <div className="animate-float absolute top-[-8rem] left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/25 blur-[70px] sm:h-80 sm:w-[36rem]" />
+      <div className="bg-brand-2/20 animate-float-reverse absolute right-[-4rem] bottom-[-4rem] h-48 w-48 rounded-full blur-[70px] sm:h-64 sm:w-64" />
     </div>
   );
 }
@@ -66,6 +67,7 @@ export default async function OnboardingPage() {
     { label: "Start your first cleaning", done: sessionCount > 0, href: "/nfc-tags" },
   ];
 
+  const stepChipColors = ["bg-primary/12 text-primary", "bg-brand-2/15 text-brand-2", "bg-status-due-soon/15 text-status-due-soon"];
   const completedCount = steps.filter((s) => s.done).length;
   const progress = Math.round((completedCount / steps.length) * 100);
   const allDone = completedCount === steps.length;
@@ -89,14 +91,20 @@ export default async function OnboardingPage() {
               <Link
                 key={step.label}
                 href={step.href}
-                className="hover:bg-accent/50 flex items-center gap-3 px-4 py-4 text-sm transition-colors first:rounded-t-xl last:rounded-b-xl"
+                className="animate-fade-in-up hover:bg-accent/50 flex items-center gap-3 px-4 py-4 text-sm transition-colors first:rounded-t-xl last:rounded-b-xl"
+                style={{ animationDelay: `${i * 60}ms` }}
               >
                 {step.done ? (
-                  <span className="bg-status-clean-bg text-status-clean flex size-7 shrink-0 items-center justify-center rounded-full">
+                  <span className="bg-status-clean-bg text-status-clean animate-pop flex size-7 shrink-0 items-center justify-center rounded-full">
                     <CheckCircle2 className="size-4" />
                   </span>
                 ) : (
-                  <span className="bg-accent text-accent-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+                  <span
+                    className={cn(
+                      "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                      stepChipColors[i % stepChipColors.length],
+                    )}
+                  >
                     {i + 1}
                   </span>
                 )}

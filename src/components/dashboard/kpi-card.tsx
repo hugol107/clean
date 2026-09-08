@@ -9,30 +9,34 @@ export function KpiCard({
   icon: Icon,
   tone = "default",
   className,
+  style,
 }: {
   label: string;
   value: string | number;
   hint?: string;
   icon?: LucideIcon;
-  tone?: "default" | "success" | "warning" | "danger";
+  tone?: "default" | "info" | "success" | "warning" | "danger";
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const toneClasses = {
-    default: "text-foreground",
+    default: "text-primary",
+    info: "text-brand-2",
     success: "text-status-clean",
     warning: "text-status-due-soon",
     danger: "text-status-overdue",
   } as const;
 
   const chipClasses = {
-    default: "bg-accent text-accent-foreground",
+    default: "bg-primary/12 text-primary",
+    info: "bg-brand-2/15 text-brand-2",
     success: "bg-status-clean-bg text-status-clean",
     warning: "bg-status-due-soon-bg text-status-due-soon",
     danger: "bg-status-overdue-bg text-status-overdue",
   } as const;
 
   return (
-    <Card className={cn("card-hover gap-2 py-5", className)}>
+    <Card className={cn("card-hover animate-fade-in-up gap-2 py-5", className)} style={style}>
       <CardContent className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">{label}</span>

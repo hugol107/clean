@@ -187,6 +187,36 @@
   }
 }
 
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, -5%) scale(1.06); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-4%, 4%) scale(1.09); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.82); }
+  70% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes gradient-pan {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(var(--bob-rot, -4deg)); }
+  50% { transform: translateY(-10px) rotate(var(--bob-rot, -4deg)); }
+}
+@keyframes ring-out {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklch, currentColor 50%, transparent); }
+  100% { box-shadow: 0 0 0 9px color-mix(in oklch, currentColor 0%, transparent); }
+}
+
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -207,6 +237,13 @@
     -webkit-background-clip: text;
     color: transparent;
   }
+  /* Slowly pans the two brand hues through a wider gradient so the same
+     mark reads as alive instead of a static swatch. Pairs with brand-gradient. */
+  .brand-gradient-live {
+    background-image: linear-gradient(120deg, var(--primary), var(--brand-2), var(--status-due-soon), var(--primary));
+    background-size: 300% 300%;
+    animation: gradient-pan 8s ease infinite;
+  }
 
   /* A soft, colored shadow under primary actions and the active nav item —
      reads as "lifted" rather than the flatter default shadow-sm everywhere. */
@@ -225,9 +262,81 @@
   }
   .card-hover:hover {
     box-shadow: 0 12px 24px -12px oklch(0.18 0.02 260 / 0.18);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
   }
   .dark .card-hover:hover {
     box-shadow: 0 12px 24px -12px oklch(0 0 0 / 0.5);
+  }
+
+  .animate-float {
+    animation: float-a 9s ease-in-out infinite;
+  }
+  .animate-float-reverse {
+    animation: float-b 11s ease-in-out infinite;
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-pop {
+    animation: pop-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-bob {
+    animation: bob 5s ease-in-out infinite;
+  }
+  .animate-ring {
+    animation: ring-out 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .stagger-1 { animation-delay: 80ms; }
+  .stagger-2 { animation-delay: 160ms; }
+  .stagger-3 { animation-delay: 240ms; }
+  .stagger-4 { animation-delay: 320ms; }
+  .stagger-5 { animation-delay: 400ms; }
+  .stagger-6 { animation-delay: 480ms; }
+  .stagger-7 { animation-delay: 560ms; }
+  .stagger-8 { animation-delay: 640ms; }
+
+  /* Decorative dot texture for hero/section backdrops — apply only to an
+     empty, aria-hidden element since opacity here would also fade children. */
+  .bg-dot-grid {
+    background-image: radial-gradient(circle, var(--foreground) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.07;
+  }
+  /* Same texture in white, for use over colored/gradient panels rather than the page background. */
+  .bg-dot-grid-invert {
+    background-image: radial-gradient(circle, white 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.15;
+  }
+
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 40%, oklch(1 0 0 / 0.35) 50%, transparent 60%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+  }
+  .btn-shine:hover::after {
+    transform: translateX(120%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .animate-float-reverse,
+    .animate-fade-in-up,
+    .animate-pop,
+    .animate-bob,
+    .animate-ring,
+    .brand-gradient-live,
+    .btn-shine::after {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 }

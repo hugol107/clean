@@ -52,21 +52,23 @@ export default async function WorkerHomePage() {
 
   return (
     <div className="flex flex-col gap-5 p-4">
-      <div className="flex flex-col gap-0.5">
-        <h1 className="text-xl font-semibold">Hi, {ctx.user.name.split(" ")[0]} 👋</h1>
+      <div className="animate-fade-in-up flex flex-col gap-0.5">
+        <h1 className="text-xl font-semibold">
+          Hi, {ctx.user.name.split(" ")[0]} <span className="animate-bob inline-block">👋</span>
+        </h1>
         <p className="text-sm text-muted-foreground">{site?.name ?? ctx.organizationName} · Today</p>
       </div>
 
       {activeSession && (
-        <Link href={`/w/task/${activeSession.id}`} className="active:scale-[0.99] transition-transform">
-          <Card className="brand-gradient shadow-glow border-0 text-white">
+        <Link href={`/w/task/${activeSession.id}`} className="animate-fade-in-up active:scale-[0.99] transition-transform">
+          <Card className="brand-gradient-live shadow-glow border-0 text-white">
             <CardContent className="flex items-center justify-between gap-3">
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs font-medium text-white/80">Active cleaning — tap to open</span>
                 <span className="text-lg font-semibold">{activeSession.location.name}</span>
                 <span className="text-xs text-white/80">Started at {format(activeSession.startedAt, "HH:mm")}</span>
               </div>
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/20">
+              <div className="animate-ring flex size-11 shrink-0 items-center justify-center rounded-full bg-white/20">
                 <Timer className="size-5" />
               </div>
             </CardContent>
@@ -75,7 +77,7 @@ export default async function WorkerHomePage() {
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        <Card className="card-hover py-4">
+        <Card className="card-hover animate-fade-in-up py-4" style={{ animationDelay: "0ms" }}>
           <CardContent className="flex items-center gap-3">
             <div className="bg-status-clean-bg text-status-clean flex size-9 shrink-0 items-center justify-center rounded-lg">
               <CheckCircle2 className="size-4" />
@@ -86,9 +88,9 @@ export default async function WorkerHomePage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="card-hover py-4">
+        <Card className="card-hover animate-fade-in-up py-4" style={{ animationDelay: "60ms" }}>
           <CardContent className="flex items-center gap-3">
-            <div className="bg-accent text-accent-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+            <div className="bg-brand-2/15 text-brand-2 flex size-9 shrink-0 items-center justify-center rounded-lg">
               <Clock3 className="size-4" />
             </div>
             <div className="flex flex-col">
@@ -97,7 +99,7 @@ export default async function WorkerHomePage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="card-hover py-4">
+        <Card className="card-hover animate-fade-in-up py-4" style={{ animationDelay: "120ms" }}>
           <CardContent className="flex items-center gap-3">
             <div className="bg-status-due-soon-bg text-status-due-soon flex size-9 shrink-0 items-center justify-center rounded-lg">
               <ListTodo className="size-4" />
@@ -108,7 +110,7 @@ export default async function WorkerHomePage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="card-hover py-4">
+        <Card className="card-hover animate-fade-in-up py-4" style={{ animationDelay: "180ms" }}>
           <CardContent className="flex items-center gap-3">
             <div className="bg-status-cleaning-bg text-status-cleaning flex size-9 shrink-0 items-center justify-center rounded-lg">
               <Timer className="size-4" />
