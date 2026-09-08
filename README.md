@@ -214,6 +214,30 @@ email is the workaround today.
 
 ## Deploying
 
+**Frontend/backend — Netlify (what production actually runs today):**
+
+- `netlify.toml` declares the build command, Node 22, and `@netlify/plugin-nextjs`, which turns
+  every page/route handler into a real server function (without it, Netlify has nothing telling it
+  this needs SSR support, and a deploy will silently ship as a static file upload — every route
+  404s, since there's no static HTML for any of them; this project has no static pages).
+- Database: uses Netlify's own auto-provisioned Postgres (`@netlify/database`) rather than a
+  separately hosted one, so there's nothing to sign up for. `src/lib/db.ts` and
+  `scripts/netlify-db-setup.ts` fall back to it only when `DATABASE_URL` isn't set — set
+  `DATABASE_URL` explicitly (Neon, Supabase, RDS...) to use a different Postgres instead, same as
+  the Vercel path below.
+- `package.json`'s `postinstall` deliberately does **not** always run `prisma generate` — see
+  `scripts/conditional-prisma-generate.mjs`. `prisma.config.ts` reads `DATABASE_URL` eagerly and
+  throws if it's completely unset, which it is during `npm install` on a fresh Netlify build (no
+  `.env` file exists there, and Netlify's own database is resolved via a JS function call, not a
+  pre-set variable). `scripts/netlify-db-setup.ts` runs `prisma generate` itself instead, as part
+  of the build command, right after resolving a real connection string.
+- **Gotcha that cost real time:** if you set `AUTH_SECRET` (or any variable) via Netlify's API/CLI
+  with `is_secret`/"sensitive variable" turned on, it does not reach the deployed function's
+  runtime even though it's visibly saved on the site — the function fails with Auth.js's
+  `MissingSecret` error, which only shows up in **Site → Logs → Functions**, not in the build log.
+  Set secrets as plain (non-"sensitive") environment variables with `functions`/`runtime` in their
+  scopes instead.
+
 **Frontend/backend — Vercel:**
 
 1. Push this repo to GitHub and import it in Vercel.
