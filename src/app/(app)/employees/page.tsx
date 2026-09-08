@@ -89,11 +89,11 @@ export default async function EmployeesPage({ searchParams }: { searchParams: Pr
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Site</TableHead>
-                  <TableHead>Tasks today</TableHead>
-                  <TableHead>Hours today</TableHead>
-                  <TableHead>Avg duration (30d)</TableHead>
+                  <TableHead className="hidden sm:table-cell">Role</TableHead>
+                  <TableHead className="hidden lg:table-cell">Site</TableHead>
+                  <TableHead className="hidden md:table-cell">Tasks today</TableHead>
+                  <TableHead className="hidden md:table-cell">Hours today</TableHead>
+                  <TableHead className="hidden lg:table-cell">Avg duration (30d)</TableHead>
                   <TableHead>SLA (30d)</TableHead>
                 </TableRow>
               </TableHeader>
@@ -104,19 +104,24 @@ export default async function EmployeesPage({ searchParams }: { searchParams: Pr
                     <TableRow key={emp.id}>
                       <TableCell>
                         <Link href={`/employees/${emp.id}`} className="flex items-center gap-2.5 font-medium hover:underline">
-                          <Avatar className="size-7">
+                          <Avatar className="size-7 shrink-0">
                             <AvatarFallback className="text-[10px]">{initials(emp.user.name)}</AvatarFallback>
                           </Avatar>
-                          {emp.user.name}
+                          <span className="flex flex-col">
+                            {emp.user.name}
+                            <span className="text-muted-foreground text-xs font-normal sm:hidden">{ROLE_LABELS[emp.role]}</span>
+                          </span>
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Badge variant="secondary">{ROLE_LABELS[emp.role]}</Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{emp.site?.name ?? "—"}</TableCell>
-                      <TableCell>{m.tasksToday}</TableCell>
-                      <TableCell>{m.hoursToday.toFixed(1)}h</TableCell>
-                      <TableCell className="text-muted-foreground">{m.avgDuration ? formatDurationCompact(m.avgDuration) : "—"}</TableCell>
+                      <TableCell className="hidden text-muted-foreground lg:table-cell">{emp.site?.name ?? "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{m.tasksToday}</TableCell>
+                      <TableCell className="hidden md:table-cell">{m.hoursToday.toFixed(1)}h</TableCell>
+                      <TableCell className="hidden text-muted-foreground lg:table-cell">
+                        {m.avgDuration ? formatDurationCompact(m.avgDuration) : "—"}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{m.sla != null ? `${m.sla}%` : "—"}</TableCell>
                     </TableRow>
                   );

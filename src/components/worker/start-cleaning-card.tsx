@@ -52,13 +52,16 @@ export function StartCleaningCard({
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background p-6 text-center">
-      <div className="rounded-full bg-primary/10 p-5 text-primary">
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden bg-background p-6 text-center">
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+        <div className="absolute top-1/4 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-primary/30 blur-[70px]" />
+      </div>
+      <div className="brand-gradient shadow-glow flex size-16 items-center justify-center rounded-2xl text-white">
         <Sparkles className="size-8" />
       </div>
       <div className="flex flex-col gap-1.5">
         <span className="text-sm text-muted-foreground">{siteName}</span>
-        <h1 className="text-2xl font-semibold">{locationName}</h1>
+        <h1 className="text-2xl font-semibold text-balance">{locationName}</h1>
         <span className="text-sm text-muted-foreground">
           {LOCATION_TYPE_LABELS[locationType]} · Target {targetDurationMinutes}m
         </span>

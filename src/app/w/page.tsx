@@ -53,20 +53,20 @@ export default async function WorkerHomePage() {
   return (
     <div className="flex flex-col gap-5 p-4">
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-xl font-semibold">Hi, {ctx.user.name.split(" ")[0]}</h1>
+        <h1 className="text-xl font-semibold">Hi, {ctx.user.name.split(" ")[0]} 👋</h1>
         <p className="text-sm text-muted-foreground">{site?.name ?? ctx.organizationName} · Today</p>
       </div>
 
       {activeSession && (
-        <Link href={`/w/task/${activeSession.id}`}>
-          <Card className="border-primary/50 bg-primary/5">
+        <Link href={`/w/task/${activeSession.id}`} className="active:scale-[0.99] transition-transform">
+          <Card className="brand-gradient shadow-glow border-0 text-white">
             <CardContent className="flex items-center justify-between gap-3">
               <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium text-primary">Active cleaning</span>
-                <span className="font-semibold">{activeSession.location.name}</span>
-                <span className="text-xs text-muted-foreground">Started at {format(activeSession.startedAt, "HH:mm")}</span>
+                <span className="text-xs font-medium text-white/80">Active cleaning — tap to open</span>
+                <span className="text-lg font-semibold">{activeSession.location.name}</span>
+                <span className="text-xs text-white/80">Started at {format(activeSession.startedAt, "HH:mm")}</span>
               </div>
-              <div className="rounded-full bg-primary p-2.5 text-primary-foreground">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/20">
                 <Timer className="size-5" />
               </div>
             </CardContent>
@@ -75,32 +75,48 @@ export default async function WorkerHomePage() {
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        <Card className="py-4">
-          <CardContent className="flex flex-col gap-1">
-            <CheckCircle2 className="size-4 text-status-clean" />
-            <span className="text-2xl font-semibold tabular-nums">{completedToday.length}</span>
-            <span className="text-xs text-muted-foreground">Tasks completed</span>
+        <Card className="card-hover py-4">
+          <CardContent className="flex items-center gap-3">
+            <div className="bg-status-clean-bg text-status-clean flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <CheckCircle2 className="size-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl leading-none font-bold tabular-nums">{completedToday.length}</span>
+              <span className="text-xs text-muted-foreground">Completed</span>
+            </div>
           </CardContent>
         </Card>
-        <Card className="py-4">
-          <CardContent className="flex flex-col gap-1">
-            <Clock3 className="size-4 text-muted-foreground" />
-            <span className="text-2xl font-semibold tabular-nums">{formatDurationCompact(totalSeconds)}</span>
-            <span className="text-xs text-muted-foreground">Total cleaning time</span>
+        <Card className="card-hover py-4">
+          <CardContent className="flex items-center gap-3">
+            <div className="bg-accent text-accent-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <Clock3 className="size-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl leading-none font-bold tabular-nums">{formatDurationCompact(totalSeconds)}</span>
+              <span className="text-xs text-muted-foreground">Cleaning time</span>
+            </div>
           </CardContent>
         </Card>
-        <Card className="py-4">
-          <CardContent className="flex flex-col gap-1">
-            <ListTodo className="size-4 text-status-due-soon" />
-            <span className="text-2xl font-semibold tabular-nums">{pendingTasks.length}</span>
-            <span className="text-xs text-muted-foreground">Pending tasks</span>
+        <Card className="card-hover py-4">
+          <CardContent className="flex items-center gap-3">
+            <div className="bg-status-due-soon-bg text-status-due-soon flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <ListTodo className="size-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl leading-none font-bold tabular-nums">{pendingTasks.length}</span>
+              <span className="text-xs text-muted-foreground">Pending</span>
+            </div>
           </CardContent>
         </Card>
-        <Card className="py-4">
-          <CardContent className="flex flex-col gap-1">
-            <Timer className="size-4 text-status-cleaning" />
-            <span className="text-2xl font-semibold tabular-nums">{activeSession ? 1 : 0}</span>
-            <span className="text-xs text-muted-foreground">Active task</span>
+        <Card className="card-hover py-4">
+          <CardContent className="flex items-center gap-3">
+            <div className="bg-status-cleaning-bg text-status-cleaning flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <Timer className="size-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl leading-none font-bold tabular-nums">{activeSession ? 1 : 0}</span>
+              <span className="text-xs text-muted-foreground">Active now</span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -116,7 +132,7 @@ export default async function WorkerHomePage() {
         ) : (
           <div className="flex flex-col gap-2">
             {tasks.map((task) => (
-              <Card key={task.id}>
+              <Card key={task.id} className="card-hover">
                 <CardContent className="flex items-center justify-between gap-3 py-1">
                   <div className="flex flex-col gap-0.5">
                     <span className="font-medium">{task.location.name}</span>

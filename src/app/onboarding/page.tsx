@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { requireUser, listUserOrganizations } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,15 @@ import { CreateOrganizationForm } from "@/components/forms/create-organization-f
 
 export const dynamic = "force-dynamic";
 
+function OnboardingBackdrop() {
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+      <div className="absolute top-[-10rem] left-1/2 h-[28rem] w-[50rem] -translate-x-1/2 rounded-full bg-primary/30 blur-[80px]" />
+      <div className="bg-brand-2/30 absolute right-[-6rem] bottom-[-6rem] h-72 w-72 rounded-full blur-[80px]" />
+    </div>
+  );
+}
+
 export default async function OnboardingPage() {
   const user = await requireUser();
   const orgs = await listUserOrganizations(user.id);
@@ -20,13 +29,14 @@ export default async function OnboardingPage() {
   // collect a company name on the way in. Ask for just that, here.
   if (orgs.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-muted/30 p-4">
+        <OnboardingBackdrop />
         <div className="w-full max-w-sm flex flex-col gap-6">
           <div className="text-center">
             <h1 className="text-xl font-semibold">Welcome to {APP_NAME}</h1>
             <p className="text-sm text-muted-foreground">First, what should we call your organization?</p>
           </div>
-          <Card>
+          <Card className="shadow-md">
             <CardContent className="pt-5">
               <CreateOrganizationForm />
             </CardContent>
@@ -61,31 +71,36 @@ export default async function OnboardingPage() {
   const allDone = completedCount === steps.length;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-muted/30 p-4">
+      <OnboardingBackdrop />
       <div className="w-full max-w-lg flex flex-col gap-6">
         <div className="text-center">
           <h1 className="text-xl font-semibold">Let&apos;s set up {APP_NAME}</h1>
-          <p className="text-sm text-muted-foreground">Seven quick steps to your first live cleaning session.</p>
+          <p className="text-sm text-muted-foreground">
+            {completedCount} of {steps.length} steps done — your first live cleaning session is next.
+          </p>
         </div>
 
-        <Progress value={progress} />
+        <Progress value={progress} className="h-2.5" />
 
-        <Card>
+        <Card className="shadow-md">
           <CardContent className="flex flex-col divide-y p-0">
             {steps.map((step, i) => (
               <Link
                 key={step.label}
                 href={step.href}
-                className="flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-accent/50 first:rounded-t-xl last:rounded-b-xl"
+                className="hover:bg-accent/50 flex items-center gap-3 px-4 py-4 text-sm transition-colors first:rounded-t-xl last:rounded-b-xl"
               >
                 {step.done ? (
-                  <CheckCircle2 className="size-5 shrink-0 text-status-clean" />
+                  <span className="bg-status-clean-bg text-status-clean flex size-7 shrink-0 items-center justify-center rounded-full">
+                    <CheckCircle2 className="size-4" />
+                  </span>
                 ) : (
-                  <Circle className="size-5 shrink-0 text-muted-foreground" />
+                  <span className="bg-accent text-accent-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+                    {i + 1}
+                  </span>
                 )}
-                <span className={cn("flex-1", step.done && "text-muted-foreground line-through")}>
-                  {i + 1}. {step.label}
-                </span>
+                <span className={cn("flex-1 font-medium", step.done && "text-muted-foreground line-through")}>{step.label}</span>
                 <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
               </Link>
             ))}

@@ -22,7 +22,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <div className="flex h-14 items-center gap-2 px-4">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold">CT</span>
+          <span className="brand-gradient shadow-glow flex size-7 items-center justify-center rounded-lg text-xs font-bold text-white">
+            CT
+          </span>
           {APP_NAME}
         </Link>
       </div>
@@ -43,25 +45,34 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b bg-background px-4">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3 sm:gap-3 sm:px-4">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
+              <Button variant="ghost" size="icon" className="shrink-0 lg:hidden">
                 <Menu className="size-4" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 bg-sidebar p-0 text-sidebar-foreground">
+            <SheetContent side="left" className="w-72 bg-sidebar p-0 text-sidebar-foreground">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
               {sidebarContent}
             </SheetContent>
           </Sheet>
+
+          <Link href="/dashboard" className="flex shrink-0 items-center gap-2 font-semibold tracking-tight lg:hidden">
+            <span className="brand-gradient flex size-7 items-center justify-center rounded-lg text-xs font-bold text-white">CT</span>
+          </Link>
 
           <form action="/search" className="relative hidden max-w-sm flex-1 sm:block">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input name="q" placeholder="Search locations, employees, tags…" className="pl-8" />
           </form>
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
+            <Button variant="ghost" size="icon" className="sm:hidden" asChild>
+              <Link href="/search">
+                <Search className="size-4" />
+              </Link>
+            </Button>
             <NotificationsMenu
               organizationId={ctx.organizationId}
               notifications={notifications.map((n) => ({ ...n, createdAt: n.createdAt.toISOString() }))}

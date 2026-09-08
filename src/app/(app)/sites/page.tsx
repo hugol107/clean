@@ -52,7 +52,7 @@ export default async function SitesPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sites.map((site) => (
             <Link key={site.id} href={`/sites/${site.id}`}>
-              <Card className="h-full transition-colors hover:border-primary/40">
+              <Card className="card-hover h-full transition-colors hover:border-primary/40">
                 <CardHeader className="flex-row items-start justify-between space-y-0">
                   <div>
                     <CardTitle>{site.name}</CardTitle>

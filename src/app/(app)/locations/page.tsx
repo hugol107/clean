@@ -99,12 +99,12 @@ export default async function LocationsPage({
               <TableHeader>
                 <TableRow>
                   <TableHead>Location</TableHead>
-                  <TableHead>Site</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead className="hidden sm:table-cell">Site</TableHead>
+                  <TableHead className="hidden lg:table-cell">Type</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last cleaned</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Frequency</TableHead>
+                  <TableHead className="hidden md:table-cell">Last cleaned</TableHead>
+                  <TableHead className="hidden lg:table-cell">Target</TableHead>
+                  <TableHead className="hidden lg:table-cell">Frequency</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -114,18 +114,21 @@ export default async function LocationsPage({
                       <Link href={`/locations/${loc.id}`} className="font-medium hover:underline">
                         {loc.name}
                       </Link>
-                      <div className="text-xs text-muted-foreground">{loc.code}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {loc.code}
+                        <span className="sm:hidden"> · {loc.siteName}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{loc.siteName}</TableCell>
-                    <TableCell className="text-muted-foreground">{LOCATION_TYPE_LABELS[loc.type]}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{loc.siteName}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">{LOCATION_TYPE_LABELS[loc.type]}</TableCell>
                     <TableCell>
                       <LocationStatusBadge status={loc.status} />
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden text-muted-foreground md:table-cell">
                       {loc.lastCleanedAt ? formatDistanceToNow(loc.lastCleanedAt, { addSuffix: true }) : "Never"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{formatMinutes(loc.targetDurationMinutes)}</TableCell>
-                    <TableCell className="text-muted-foreground">every {formatMinutes(loc.targetFrequencyMinutes)}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">{formatMinutes(loc.targetDurationMinutes)}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">every {formatMinutes(loc.targetFrequencyMinutes)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

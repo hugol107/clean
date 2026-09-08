@@ -19,9 +19,20 @@ export interface LiveSession {
 
 const POLL_INTERVAL_MS = 8000;
 
+/**
+ * `null` until the first client-side effect fires, then ticks every second.
+ * Never seeds from `Date.now()` in the initializer — that runs during SSR
+ * *and* again on the client during hydration, at two different instants,
+ * which is a classic hydration-mismatch source (the server-rendered elapsed
+ * time and the client's first-render elapsed time land in different
+ * seconds). Starting from `null` guarantees the server HTML and the client's
+ * pre-hydration render are identical; the real ticking clock only ever runs
+ * client-side, inside useEffect.
+ */
 function useNow(intervalMs: number) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), intervalMs);
     return () => clearInterval(id);
   }, [intervalMs]);
@@ -30,6 +41,10 @@ function useNow(intervalMs: number) {
 
 export function LiveOperationsTable({ organizationId, initialSessions }: { organizationId: string; initialSessions: LiveSession[] }) {
   const [sessions, setSessions] = useState(initialSessions);
+  // Deliberately nullable — see useNow's doc comment. Every duration/status
+  // cell below must render identically for `now === null` on both the
+  // server and the client's pre-hydration pass, then switch to live values
+  // once the client-only effect provides a real timestamp.
   const now = useNow(1000);
 
   useEffect(() => {
@@ -60,28 +75,35 @@ export function LiveOperationsTable({ organizationId, initialSessions }: { organ
       <TableHeader>
         <TableRow>
           <TableHead>Worker</TableHead>
-          <TableHead>Location</TableHead>
-          <TableHead>Started</TableHead>
+          <TableHead className="hidden sm:table-cell">Location</TableHead>
+          <TableHead className="hidden lg:table-cell">Started</TableHead>
           <TableHead>Duration</TableHead>
-          <TableHead>Target</TableHead>
+          <TableHead className="hidden md:table-cell">Target</TableHead>
           <TableHead>Status</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sessions.map((s) => {
-          const elapsedSeconds = Math.floor((now - new Date(s.startedAt).getTime()) / 1000);
+          const elapsedSeconds = now === null ? null : Math.floor((now - new Date(s.startedAt).getTime()) / 1000);
           const targetSeconds = s.targetMinutes * 60;
-          const ratio = elapsedSeconds / targetSeconds;
-          const status = ratio >= 1.5 ? "overdue" : ratio >= 1 ? "warning" : "normal";
+          const ratio = elapsedSeconds === null ? 0 : elapsedSeconds / targetSeconds;
+          const status = elapsedSeconds === null ? "normal" : ratio >= 1.5 ? "overdue" : ratio >= 1 ? "warning" : "normal";
           return (
             <TableRow key={s.sessionId}>
-              <TableCell className="font-medium">{s.employeeName}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium">
+                {s.employeeName}
+                <Link href={`/locations/${s.locationId}`} className="text-muted-foreground block text-xs font-normal hover:underline sm:hidden">
+                  {s.locationName}
+                </Link>
+              </TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <Link href={`/locations/${s.locationId}`} className="hover:underline">
                   {s.locationName}
                 </Link>
               </TableCell>
-              <TableCell className="text-muted-foreground">{new Date(s.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</TableCell>
+              <TableCell className="hidden text-muted-foreground lg:table-cell">
+                {new Date(s.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </TableCell>
               <TableCell
                 className={cn(
                   "font-mono tabular-nums font-medium",
@@ -89,9 +111,9 @@ export function LiveOperationsTable({ organizationId, initialSessions }: { organ
                   status === "warning" && "text-status-due-soon",
                 )}
               >
-                {formatDuration(elapsedSeconds)}
+                {elapsedSeconds === null ? "—" : formatDuration(elapsedSeconds)}
               </TableCell>
-              <TableCell className="text-muted-foreground">{s.targetMinutes}m</TableCell>
+              <TableCell className="hidden text-muted-foreground md:table-cell">{s.targetMinutes}m</TableCell>
               <TableCell>
                 <span
                   className={cn(

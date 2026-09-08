@@ -22,18 +22,20 @@ import { APP_NAME } from "@/lib/constants";
 export default function MarketingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="border-b">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold">CT</span>
+      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold tracking-tight">
+            <span className="brand-gradient shadow-glow flex size-7 items-center justify-center rounded-lg text-xs font-bold text-white">
+              CT
+            </span>
             {APP_NAME}
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
-            <a href="#how-it-works" className="hover:text-foreground">How it works</a>
-            <a href="#benefits" className="hover:text-foreground">Benefits</a>
-            <a href="#industries" className="hover:text-foreground">Industries</a>
+            <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
+            <a href="#benefits" className="hover:text-foreground transition-colors">Benefits</a>
+            <a href="#industries" className="hover:text-foreground transition-colors">Industries</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Button variant="ghost" size="sm" asChild>
               <Link href="/login">Sign in</Link>
             </Button>
@@ -45,24 +47,30 @@ export default function MarketingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-4 pt-20 pb-16 text-center">
-          <span className="rounded-full border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            Real-time cleaning operations
-          </span>
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Know exactly when every space was cleaned.</h1>
-          <p className="max-w-2xl text-lg text-muted-foreground">
-            Real-time cleaning operations powered by a simple tap. Turn every NFC tag or QR code into digital proof
-            of service, live visibility, and SLA compliance you can actually measure.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" asChild>
-              <Link href="/register">
-                Start free <ArrowRight />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="#how-it-works">See how it works</Link>
-            </Button>
+        <section className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+            <div className="absolute top-[-12rem] left-1/2 h-[32rem] w-[64rem] -translate-x-1/2 rounded-full bg-primary/35 blur-[90px]" />
+            <div className="bg-brand-2/35 absolute top-[-4rem] right-[8%] h-72 w-72 rounded-full blur-[80px]" />
+          </div>
+          <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-4 pt-20 pb-16 text-center sm:pt-28">
+            <span className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium">
+              Real-time cleaning operations
+            </span>
+            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">Know exactly when every space was cleaned.</h1>
+            <p className="max-w-2xl text-lg text-muted-foreground text-balance">
+              Real-time cleaning operations powered by a simple tap. Turn every NFC tag or QR code into digital proof
+              of service, live visibility, and SLA compliance you can actually measure.
+            </p>
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Button size="lg" asChild>
+                <Link href="/register">
+                  Start free <ArrowRight />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="#how-it-works">See how it works</Link>
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -76,7 +84,7 @@ export default function MarketingPage() {
                 { icon: ClipboardCheck, title: "3. Cleaner completes the task", desc: "They work through the checklist, note any issues, and tap again to finish." },
                 { icon: Radio, title: "4. Manager sees everything live", desc: "Live operations, durations, SLA compliance, and incidents — all in one dashboard." },
               ].map((step) => (
-                <div key={step.title} className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center shadow-sm">
+                <div key={step.title} className="card-hover flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center shadow-sm">
                   <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
                     <step.icon className="size-5" />
                   </div>
@@ -100,8 +108,8 @@ export default function MarketingPage() {
                 { icon: ScrollText, title: "Less paperwork", desc: "Checklists, incidents, and reports captured digitally at the point of work." },
                 { icon: Building2, title: "Built for scale", desc: "Multi-site, multi-team, role-based access from day one." },
               ].map((b) => (
-                <div key={b.title} className="flex gap-4 rounded-xl border p-5">
-                  <div className="h-fit rounded-lg bg-muted p-2 text-muted-foreground">
+                <div key={b.title} className="card-hover flex gap-4 rounded-xl border bg-card p-5 shadow-sm">
+                  <div className="bg-accent text-accent-foreground h-fit rounded-lg p-2">
                     <b.icon className="size-4" />
                   </div>
                   <div>
@@ -127,8 +135,10 @@ export default function MarketingPage() {
                 { icon: Stethoscope, label: "Healthcare" },
                 { icon: ClipboardCheck, label: "Facility Management" },
               ].map((ind) => (
-                <div key={ind.label} className="flex flex-col items-center gap-2 rounded-xl border bg-card py-6 text-sm font-medium shadow-sm">
-                  <ind.icon className="size-5 text-muted-foreground" />
+                <div key={ind.label} className="card-hover flex flex-col items-center gap-2 rounded-xl border bg-card py-6 text-sm font-medium shadow-sm">
+                  <div className="bg-accent text-accent-foreground rounded-full p-2.5">
+                    <ind.icon className="size-4" />
+                  </div>
                   {ind.label}
                 </div>
               ))}

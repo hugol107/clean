@@ -42,9 +42,9 @@ export default async function UsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Site access</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden sm:table-cell">Role</TableHead>
+                  <TableHead className="hidden md:table-cell">Site access</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -61,13 +61,13 @@ export default async function UsersPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge variant="secondary">{ROLE_LABELS[m.role]}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden text-muted-foreground md:table-cell">
                       {m.role === "ORG_ADMIN" ? "All sites" : m.siteAssignments.map((a) => a.site.name).join(", ") || "None"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{m.status}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{m.status}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

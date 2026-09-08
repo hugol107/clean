@@ -42,6 +42,12 @@
   --sidebar-border: oklch(0.91 0.006 260);
   --sidebar-ring: var(--ring);
 
+  /* A second brand hue (teal), paired with --primary (violet) for gradient
+     accents — the logo mark, the marketing hero, a handful of highlight
+     moments. Used deliberately sparingly; the app chrome itself stays
+     mostly neutral so the gradient still reads as an accent, not wallpaper. */
+  --brand-2: oklch(0.72 0.13 195);
+
   /* Semantic operational status colors — used consistently across the
      building map, live operations table, location badges, etc. */
   --status-clean: oklch(0.58 0.15 155);
@@ -95,6 +101,8 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: var(--ring);
 
+  --brand-2: oklch(0.78 0.12 195);
+
   --status-clean: oklch(0.72 0.16 155);
   --status-clean-bg: oklch(0.32 0.06 155);
   --status-cleaning: oklch(0.72 0.14 250);
@@ -121,6 +129,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-brand-2: var(--brand-2);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -184,5 +193,41 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Brand gradient — the logo mark, a handful of hero/highlight moments.
+     Deliberately not used for general chrome (buttons, cards) so it keeps
+     reading as an accent. */
+  .brand-gradient {
+    background-image: linear-gradient(135deg, var(--primary), var(--brand-2));
+  }
+  .brand-gradient-text {
+    background-image: linear-gradient(135deg, var(--primary), var(--brand-2));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  /* A soft, colored shadow under primary actions and the active nav item —
+     reads as "lifted" rather than the flatter default shadow-sm everywhere. */
+  .shadow-glow {
+    box-shadow:
+      0 1px 2px oklch(0 0 0 / 0.04),
+      0 8px 20px -6px var(--primary),
+      0 0 0 1px oklch(0 0 0 / 0.02);
+  }
+
+  .card-hover {
+    transition:
+      box-shadow 0.18s ease,
+      transform 0.18s ease,
+      border-color 0.18s ease;
+  }
+  .card-hover:hover {
+    box-shadow: 0 12px 24px -12px oklch(0.18 0.02 260 / 0.18);
+    transform: translateY(-1px);
+  }
+  .dark .card-hover:hover {
+    box-shadow: 0 12px 24px -12px oklch(0 0 0 / 0.5);
   }
 }

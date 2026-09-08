@@ -56,28 +56,33 @@ export default async function NfcTagsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tag</TableHead>
+                  <TableHead className="hidden lg:table-cell">Tag</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead>Site</TableHead>
+                  <TableHead className="hidden sm:table-cell">Site</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last used</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead className="hidden md:table-cell">Last used</TableHead>
+                  <TableHead className="hidden lg:table-cell">Created</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tags.map((tag) => (
                   <TableRow key={tag.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{tag.label || tag.token.slice(0, 10) + "…"}</TableCell>
-                    <TableCell>{tag.location?.name ?? <span className="text-muted-foreground">Unassigned</span>}</TableCell>
-                    <TableCell className="text-muted-foreground">{tag.location?.site.name ?? "—"}</TableCell>
+                    <TableCell className="hidden font-mono text-xs text-muted-foreground lg:table-cell">
+                      {tag.label || tag.token.slice(0, 10) + "…"}
+                    </TableCell>
+                    <TableCell>
+                      {tag.location?.name ?? <span className="text-muted-foreground">Unassigned</span>}
+                      <div className="text-muted-foreground text-xs font-normal sm:hidden">{tag.location?.site.name ?? "—"}</div>
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{tag.location?.site.name ?? "—"}</TableCell>
                     <TableCell>
                       <ToneBadge tone={NFC_TAG_STATUS_TONE[tag.status]}>{NFC_TAG_STATUS_LABELS[tag.status]}</ToneBadge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden text-muted-foreground md:table-cell">
                       {tag.lastUsedAt ? formatDistanceToNow(tag.lastUsedAt, { addSuffix: true }) : "Never"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{formatDistanceToNow(tag.createdAt, { addSuffix: true })}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">{formatDistanceToNow(tag.createdAt, { addSuffix: true })}</TableCell>
                     <TableCell>
                       <TagRowActions
                         organizationId={ctx.organizationId}

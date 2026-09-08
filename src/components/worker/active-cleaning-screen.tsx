@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ReportIssueDialog } from "@/components/worker/report-issue-dialog";
 import { completeCleaningAction } from "@/server/actions/cleaning";
 import { requestGeolocationOnce } from "@/hooks/use-geolocation";
-import { formatDuration } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import { LocationVerification, TapMethod } from "@/generated/prisma/enums";
 
 export interface ChecklistItemView {
@@ -101,20 +101,34 @@ export function ActiveCleaningScreen({
       </div>
 
       {checklistItems.length > 0 && (
-        <div className="flex flex-col gap-3 rounded-xl border bg-card p-4">
-          <span className="text-sm font-medium">Checklist</span>
-          {checklistItems.map((item) => (
-            <label key={item.id} className="flex items-center gap-3 py-1 text-sm">
-              <Checkbox
-                checked={checked[item.checklistItemId] ?? false}
-                onCheckedChange={(value) => setChecked((prev) => ({ ...prev, [item.checklistItemId]: value === true }))}
-              />
-              <span className="flex-1">
-                {item.label}
-                {item.isRequired && <span className="text-destructive"> *</span>}
-              </span>
-            </label>
-          ))}
+        <div className="flex flex-col gap-1 rounded-xl border bg-card p-2">
+          <div className="flex items-center justify-between px-2 pt-1.5 pb-1">
+            <span className="text-sm font-medium">Checklist</span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {Object.values(checked).filter(Boolean).length}/{checklistItems.length}
+            </span>
+          </div>
+          {checklistItems.map((item) => {
+            const isChecked = checked[item.checklistItemId] ?? false;
+            return (
+              <label
+                key={item.id}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-2 py-3 text-sm transition-colors active:bg-accent/70",
+                  isChecked && "bg-status-clean-bg/40",
+                )}
+              >
+                <Checkbox
+                  checked={isChecked}
+                  onCheckedChange={(value) => setChecked((prev) => ({ ...prev, [item.checklistItemId]: value === true }))}
+                />
+                <span className={cn("flex-1", isChecked && "text-muted-foreground line-through")}>
+                  {item.label}
+                  {item.isRequired && !isChecked && <span className="text-destructive"> *</span>}
+                </span>
+              </label>
+            );
+          })}
         </div>
       )}
 

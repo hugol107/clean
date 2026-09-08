@@ -64,32 +64,37 @@ export default async function IssuesPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Reported</TableHead>
+                  <TableHead className="hidden sm:table-cell">Reported</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead className="hidden lg:table-cell">Type</TableHead>
                   <TableHead>Severity</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Reported by</TableHead>
+                  <TableHead className="hidden md:table-cell">Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Reported by</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {issues.map((issue) => (
                   <TableRow key={issue.id}>
-                    <TableCell className="text-muted-foreground">{formatDistanceToNow(issue.createdAt, { addSuffix: true })}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {formatDistanceToNow(issue.createdAt, { addSuffix: true })}
+                    </TableCell>
                     <TableCell>
                       <Link href={`/issues/${issue.id}`} className="font-medium hover:underline">
                         {issue.location.name}
                       </Link>
-                      <div className="text-xs text-muted-foreground">{issue.location.site.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {issue.location.site.name}
+                        <span className="sm:hidden"> · {formatDistanceToNow(issue.createdAt, { addSuffix: true })}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{ISSUE_TYPE_LABELS[issue.type]}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">{ISSUE_TYPE_LABELS[issue.type]}</TableCell>
                     <TableCell>
                       <ToneBadge tone={ISSUE_SEVERITY_TONE[issue.severity]}>{ISSUE_SEVERITY_LABELS[issue.severity]}</ToneBadge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <ToneBadge tone={ISSUE_STATUS_TONE[issue.status]}>{ISSUE_STATUS_LABELS[issue.status]}</ToneBadge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{issue.reportedByUser?.name ?? "—"}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">{issue.reportedByUser?.name ?? "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

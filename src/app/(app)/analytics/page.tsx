@@ -143,21 +143,24 @@ export default async function AnalyticsPage({
               <TableHeader>
                 <TableRow>
                   <TableHead>Location</TableHead>
-                  <TableHead>Site</TableHead>
+                  <TableHead className="hidden sm:table-cell">Site</TableHead>
                   <TableHead>Cleanings</TableHead>
-                  <TableHead>Avg duration</TableHead>
-                  <TableHead>Target</TableHead>
+                  <TableHead className="hidden md:table-cell">Avg duration</TableHead>
+                  <TableHead className="hidden lg:table-cell">Target</TableHead>
                   <TableHead>Variance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {locationPerf.slice(0, 15).map((row) => (
                   <TableRow key={row.locationId}>
-                    <TableCell className="font-medium">{row.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{row.siteName}</TableCell>
+                    <TableCell className="font-medium">
+                      {row.name}
+                      <div className="text-muted-foreground text-xs font-normal sm:hidden">{row.siteName}</div>
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{row.siteName}</TableCell>
                     <TableCell>{row.cleanings}</TableCell>
-                    <TableCell>{formatDurationCompact(row.avgDurationSeconds)}</TableCell>
-                    <TableCell className="text-muted-foreground">{row.targetMinutes}m</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatDurationCompact(row.avgDurationSeconds)}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">{row.targetMinutes}m</TableCell>
                     <TableCell className={row.variancePercent > 15 ? "text-status-overdue" : row.variancePercent < -10 ? "text-status-cleaning" : ""}>
                       {row.variancePercent > 0 ? "+" : ""}
                       {row.variancePercent}%

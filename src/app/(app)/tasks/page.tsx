@@ -82,21 +82,24 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               <TableHeader>
                 <TableRow>
                   <TableHead>Task</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Assigned to</TableHead>
-                  <TableHead>Due</TableHead>
-                  <TableHead>Priority</TableHead>
+                  <TableHead className="hidden md:table-cell">Location</TableHead>
+                  <TableHead className="hidden lg:table-cell">Assigned to</TableHead>
+                  <TableHead className="hidden sm:table-cell">Due</TableHead>
+                  <TableHead className="hidden sm:table-cell">Priority</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tasks.map((task) => (
                   <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.title}</TableCell>
-                    <TableCell className="text-muted-foreground">{task.location.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{task.assignedEmployee?.user.name ?? "Unassigned"}</TableCell>
-                    <TableCell className="text-muted-foreground">{task.dueAt ? format(task.dueAt, "MMM d, HH:mm") : "—"}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium">
+                      {task.title}
+                      <div className="text-muted-foreground text-xs font-normal md:hidden">{task.location.name}</div>
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground md:table-cell">{task.location.name}</TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">{task.assignedEmployee?.user.name ?? "Unassigned"}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{task.dueAt ? format(task.dueAt, "MMM d, HH:mm") : "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <ToneBadge tone={TASK_PRIORITY_TONE[task.priority]}>{TASK_PRIORITY_LABELS[task.priority]}</ToneBadge>
                     </TableCell>
                     <TableCell>
