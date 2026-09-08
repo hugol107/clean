@@ -7,41 +7,61 @@ import { runAction, type ActionResult } from "@/server/actions/action-helpers";
 import * as employeesService from "@/server/services/employees";
 import { OrgRole } from "@/generated/prisma/enums";
 
-const createEmployeeSchema = z.object({
-  organizationId: z.string().min(1),
-  name: z.string().trim().min(2).max(120),
-  email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(8).max(200),
-  siteId: z.string().min(1),
-  employeeCode: z.string().trim().max(40).optional(),
-  jobTitle: z.string().trim().max(120).optional(),
-});
+const createEmployeeSchema = z
+  .object({
+    organizationId: z.string().min(1),
+    name: z.string().trim().min(2).max(120),
+    email: z.string().trim().toLowerCase().email(),
+    authMethod: z.enum(["password", "google"]).default("password"),
+    password: z.string().min(8).max(200).optional(),
+    siteId: z.string().min(1),
+    employeeCode: z.string().trim().max(40).optional(),
+    jobTitle: z.string().trim().max(120).optional(),
+  })
+  .refine((data) => data.authMethod !== "password" || !!data.password, {
+    message: "Set a password, or switch to Google account.",
+    path: ["password"],
+  });
 
 export async function createEmployeeAction(input: z.infer<typeof createEmployeeSchema>): Promise<ActionResult<{ id: string }>> {
   return runAction(async () => {
-    const parsed = createEmployeeSchema.parse(input);
+    const { authMethod, ...parsed } = createEmployeeSchema.parse(input);
     const ctx = await requirePermission(parsed.organizationId, "employee:manage");
-    const { employeeProfile } = await employeesService.createEmployee({ ...parsed, actorUserId: ctx.user.id });
+    const { employeeProfile } = await employeesService.createEmployee({
+      ...parsed,
+      password: authMethod === "google" ? undefined : parsed.password,
+      actorUserId: ctx.user.id,
+    });
     revalidatePath("/employees");
     revalidatePath("/onboarding");
     return { id: employeeProfile.id };
   });
 }
 
-const createMemberSchema = z.object({
-  organizationId: z.string().min(1),
-  name: z.string().trim().min(2).max(120),
-  email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(8).max(200),
-  role: z.enum([OrgRole.ORG_ADMIN, OrgRole.SITE_MANAGER, OrgRole.SUPERVISOR]),
-  siteIds: z.array(z.string().min(1)).optional(),
-});
+const createMemberSchema = z
+  .object({
+    organizationId: z.string().min(1),
+    name: z.string().trim().min(2).max(120),
+    email: z.string().trim().toLowerCase().email(),
+    authMethod: z.enum(["password", "google"]).default("password"),
+    password: z.string().min(8).max(200).optional(),
+    role: z.enum([OrgRole.ORG_ADMIN, OrgRole.SITE_MANAGER, OrgRole.SUPERVISOR]),
+    siteIds: z.array(z.string().min(1)).optional(),
+  })
+  .refine((data) => data.authMethod !== "password" || !!data.password, {
+    message: "Set a password, or switch to Google account.",
+    path: ["password"],
+  });
 
 export async function createOrgMemberAction(input: z.infer<typeof createMemberSchema>): Promise<ActionResult<{ id: string }>> {
   return runAction(async () => {
-    const parsed = createMemberSchema.parse(input);
+    const { authMethod, ...parsed } = createMemberSchema.parse(input);
     const ctx = await requirePermission(parsed.organizationId, "user:manage");
-    const { membership } = await employeesService.createOrgMember({ ...parsed, actorUserId: ctx.user.id });
+    const { membership } = await employeesService.createOrgMember({
+      ...parsed,
+      password: authMethod === "google" ? undefined : parsed.password,
+      actorUserId: ctx.user.id,
+    });
     revalidatePath("/users");
     return { id: membership.id };
   });

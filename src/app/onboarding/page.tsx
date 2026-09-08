@@ -7,14 +7,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { redirect } from "next/navigation";
+import { CreateOrganizationForm } from "@/components/forms/create-organization-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
   const user = await requireUser();
   const orgs = await listUserOrganizations(user.id);
-  if (orgs.length === 0) redirect("/register");
+
+  // Reached by anyone authenticated with zero organizations — including a
+  // fresh Google sign-in, which has no password-based /register form to
+  // collect a company name on the way in. Ask for just that, here.
+  if (orgs.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+        <div className="w-full max-w-sm flex flex-col gap-6">
+          <div className="text-center">
+            <h1 className="text-xl font-semibold">Welcome to {APP_NAME}</h1>
+            <p className="text-sm text-muted-foreground">First, what should we call your organization?</p>
+          </div>
+          <Card>
+            <CardContent className="pt-5">
+              <CreateOrganizationForm />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const organizationId = orgs[0].organizationId;
   const [siteCount, locationCount, employeeCount, checklistCount, assignedTagCount, sessionCount] = await Promise.all([

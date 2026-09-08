@@ -14,6 +14,7 @@ checklists, incidents and RBAC.
 - [What's implemented](#whats-implemented-phase-1-mvp)
 - [Demo credentials](#demo-credentials)
 - [Run it locally](#run-it-locally)
+- [Google Sign-In](#google-sign-in)
 - [Deploying](#deploying)
 - [Testing](#testing)
 - [Phase 2 / Phase 3](#phase-2--phase-3-not-in-this-mvp)
@@ -29,8 +30,9 @@ checklists, incidents and RBAC.
 - **Data**: PostgreSQL via Prisma ORM 7 (the new `prisma-client` generator + `@prisma/adapter-pg`
   driver adapter — see [Key technical decisions](#key-technical-decisions)).
 - **Auth**: Auth.js v5 (`next-auth`), credentials (email + password) always on, magic-link email
-  sign-in auto-enabled when SMTP env vars are present. JWT sessions. Prisma adapter for account/
-  verification-token storage.
+  and Google sign-in each auto-enabled when their env vars are present (see
+  [Google Sign-In](#google-sign-in)). JWT sessions. Prisma adapter for account/verification-token
+  storage.
 - **Business logic layering**: `src/server/services/*` (pure business logic + Prisma queries) →
   `src/server/actions/*` (Next.js Server Actions: Zod validation + RBAC/tenant checks + calls the
   service + `revalidatePath`) → pages/components. Route Handlers under `src/app/api/*` are used
@@ -172,6 +174,44 @@ Other useful scripts: `npm run test`, `npm run lint`, `npm run build`, `npm run 
 If port 5433 or 3000 is already taken on your machine, change the mapped port in
 `docker-compose.yml` / `DATABASE_URL`, or run `next dev -p <port>`.
 
+## Google Sign-In
+
+Optional — the app works fully on email + password without it. When configured, a
+**"Continue with Google"** button appears on `/login` and `/register`, and managers get a
+**Google account** option (no password) alongside **Password** when creating a worker
+(`/employees/new`) or inviting a manager/supervisor (`Users → Invite user`) — the person then
+signs in with that exact Google email instead of being given a temporary password.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an OAuth
+   2.0 Client ID (**APIs & Services → Credentials → Create Credentials → OAuth client ID**,
+   application type **Web application**).
+2. Add an **Authorized redirect URI**:
+   - Local dev: `http://localhost:3000/api/auth/callback/google`
+   - Production: `https://yourdomain.com/api/auth/callback/google`
+3. Copy the generated Client ID and Client Secret into `.env` (or your Vercel project's
+   environment variables):
+   ```
+   GOOGLE_CLIENT_ID="..."
+   GOOGLE_CLIENT_SECRET="..."
+   ```
+4. Restart the dev server (env vars are read at startup).
+
+**How account linking works:** a Google sign-in is matched to an existing `User` row by email
+(`allowDangerousEmailAccountLinking: true` in `src/auth.ts`) — safe specifically because Google
+verifies the email during its own OAuth handshake, so nobody can complete it for an address they
+don't control. That's what makes "manager invites `worker@gmail.com` with no password, worker
+later clicks Continue with Google" resolve to the *same* account instead of a duplicate.
+
+**A fresh Google sign-in with no invite and no organization yet** (someone who clicked "Continue
+with Google" straight from `/register`) lands on `/onboarding`, which asks for just a company
+name — there's no password to collect, so it skips the `/register` form entirely
+(`src/server/actions/organizations.ts` → `createOrganizationForSelfAction`).
+
+**Caveat:** if a manager mistypes the Gmail address when inviting someone by Google account,
+that person can never sign in (no password to fall back to, and Google OAuth requires owning the
+real inbox) — there's no "add a password later" recovery UI yet. Re-inviting with the corrected
+email is the workaround today.
+
 ## Deploying
 
 **Frontend/backend — Vercel:**
@@ -234,7 +274,11 @@ of these require a rewrite:
 - **Richer anomaly detection** — "many Tap-Ins without Tap-Out", "tag used anomalously", "task
   repeatedly overdue" are not implemented; the too-short/too-long session rules are, in the same
   engine (`src/lib/sla.ts` → `detectSessionAnomalies`), so adding more rules is additive.
-- **Billing/Stripe, SSO, public API, audit-log viewer UI, Teams (grouping employees beyond
+- **Enterprise SSO (SAML/OIDC per organization)** — Google Sign-In is implemented (see
+  [Google Sign-In](#google-sign-in)); a per-organization identity provider (Okta, Azure AD, a
+  generic SAML connector) is not — Auth.js supports adding one as another provider in `src/auth.ts`
+  following the same pattern.
+- **Billing/Stripe, public API, audit-log viewer UI, Teams (grouping employees beyond
   site-scoping)** — schema/plan-limits scaffolding exists (`Organization.plan`,
   `ORG_PLAN_LIMITS` in `src/lib/constants.ts`) but nothing is wired to a payment provider or an
   external IdP.

@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GoogleIcon } from "@/components/icons/google-icon";
 import { createOrgMemberAction } from "@/server/actions/employees";
 import { generateShortCode } from "@/lib/tokens-client";
 import { ROLE_LABELS } from "@/lib/rbac";
@@ -23,6 +25,7 @@ export function InviteUserDialog({ organizationId, sites }: { organizationId: st
   const [isPending, startTransition] = useTransition();
   const [role, setRole] = useState<(typeof INVITABLE_ROLES)[number]>(OrgRole.SITE_MANAGER);
   const [siteIds, setSiteIds] = useState<string[]>([]);
+  const [authMethod, setAuthMethod] = useState<"password" | "google">("password");
   const [password] = useState(() => generateShortCode());
 
   function handleSubmit(formData: FormData) {
@@ -31,7 +34,8 @@ export function InviteUserDialog({ organizationId, sites }: { organizationId: st
         organizationId,
         name: String(formData.get("name") ?? ""),
         email: String(formData.get("email") ?? ""),
-        password: String(formData.get("password") ?? ""),
+        authMethod,
+        password: authMethod === "password" ? String(formData.get("password") ?? "") : undefined,
         role,
         siteIds: role === OrgRole.ORG_ADMIN ? undefined : siteIds,
       });
@@ -66,10 +70,27 @@ export function InviteUserDialog({ organizationId, sites }: { organizationId: st
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" required />
           </div>
+
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="password">Temporary password</Label>
-            <Input id="password" name="password" defaultValue={password} required minLength={8} />
+            <Label>How will they sign in?</Label>
+            <Tabs value={authMethod} onValueChange={(v) => setAuthMethod(v as "password" | "google")}>
+              <TabsList className="w-full">
+                <TabsTrigger value="password">Password</TabsTrigger>
+                <TabsTrigger value="google" className="gap-1.5">
+                  <GoogleIcon className="size-3.5" /> Google account
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {authMethod === "password" ? (
+              <Input id="password" name="password" defaultValue={password} required minLength={8} />
+            ) : (
+              <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                No password is set. They sign in with <strong>Continue with Google</strong> using this exact email — make sure it
+                matches their Google account.
+              </p>
+            )}
           </div>
+
           <div className="flex flex-col gap-1.5">
             <Label>Role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as (typeof INVITABLE_ROLES)[number])}>

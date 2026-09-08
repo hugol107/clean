@@ -6,9 +6,10 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default function LoginPage() {
   const magicLinkEnabled = Boolean(process.env.EMAIL_SERVER && process.env.EMAIL_FROM);
+  const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
   return (
     <AuthShell title="Welcome back" description="Sign in to manage your cleaning operations.">
-      <LoginForm magicLinkEnabled={magicLinkEnabled} />
+      <LoginForm magicLinkEnabled={magicLinkEnabled} googleEnabled={googleEnabled} />
     </AuthShell>
   );
 }

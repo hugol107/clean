@@ -2,11 +2,37 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { requirePermission, requireSuperAdmin } from "@/lib/tenant";
+import { requirePermission, requireSuperAdmin, requireUser } from "@/lib/tenant";
 import { runAction, type ActionResult } from "@/server/actions/action-helpers";
 import * as organizationsService from "@/server/services/organizations";
 import * as sitesService from "@/server/services/sites";
 import { LocationVerification, OrgPlan } from "@/generated/prisma/enums";
+
+const createOrgForSelfSchema = z.object({
+  name: z.string().trim().min(2, "Company name is too short").max(160),
+});
+
+/**
+ * Onboarding step 1 for someone who is already authenticated but belongs to
+ * no organization yet — the case a Google-first sign-in lands in, since
+ * there's no password-based registration form to collect a company name on
+ * the way in. Deliberately password-agnostic: the person is already signed
+ * in, so this only ever needs the org name.
+ */
+export async function createOrganizationForSelfAction(
+  input: z.infer<typeof createOrgForSelfSchema>,
+): Promise<ActionResult<{ organizationId: string }>> {
+  return runAction(async () => {
+    const parsed = createOrgForSelfSchema.parse(input);
+    const user = await requireUser();
+    const { organization } = await organizationsService.createOrganizationWithOwner({
+      name: parsed.name,
+      ownerUserId: user.id,
+    });
+    revalidatePath("/onboarding");
+    return { organizationId: organization.id };
+  });
+}
 
 const updateSettingsSchema = z.object({
   organizationId: z.string().min(1),

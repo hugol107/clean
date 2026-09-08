@@ -9,13 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { GoogleIcon } from "@/components/icons/google-icon";
 
-export function LoginForm({ magicLinkEnabled }: { magicLinkEnabled: boolean }) {
+export function LoginForm({ magicLinkEnabled, googleEnabled }: { magicLinkEnabled: boolean; googleEnabled: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/post-login";
   const [isPending, startTransition] = useTransition();
   const [isMagicPending, startMagicTransition] = useTransition();
+  const [isGooglePending, startGoogleTransition] = useTransition();
   const [email, setEmail] = useState("");
 
   function handleCredentials(formData: FormData) {
@@ -34,6 +36,12 @@ export function LoginForm({ magicLinkEnabled }: { magicLinkEnabled: boolean }) {
     });
   }
 
+  function handleGoogle() {
+    startGoogleTransition(async () => {
+      await signIn("google", { callbackUrl });
+    });
+  }
+
   function handleMagicLink() {
     if (!email) {
       toast.error("Enter your email first.");
@@ -47,6 +55,20 @@ export function LoginForm({ magicLinkEnabled }: { magicLinkEnabled: boolean }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {googleEnabled && (
+        <>
+          <Button type="button" variant="outline" className="gap-2" onClick={handleGoogle} disabled={isGooglePending}>
+            <GoogleIcon className="size-4" />
+            {isGooglePending ? "Redirecting…" : "Continue with Google"}
+          </Button>
+          <div className="flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <Separator className="flex-1" />
+          </div>
+        </>
+      )}
+
       <form action={handleCredentials} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>
@@ -71,16 +93,9 @@ export function LoginForm({ magicLinkEnabled }: { magicLinkEnabled: boolean }) {
       </form>
 
       {magicLinkEnabled && (
-        <>
-          <div className="flex items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">or</span>
-            <Separator className="flex-1" />
-          </div>
-          <Button type="button" variant="outline" onClick={handleMagicLink} disabled={isMagicPending}>
-            {isMagicPending ? "Sending link…" : "Email me a magic link"}
-          </Button>
-        </>
+        <Button type="button" variant="ghost" size="sm" onClick={handleMagicLink} disabled={isMagicPending}>
+          {isMagicPending ? "Sending link…" : "Email me a magic link instead"}
+        </Button>
       )}
 
       <p className="text-center text-sm text-muted-foreground">

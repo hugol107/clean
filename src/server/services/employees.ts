@@ -12,7 +12,8 @@ export interface CreateEmployeeParams {
   actorUserId: string;
   name: string;
   email: string;
-  password: string;
+  /** Omit (or leave undefined) to create a Google-only account — see authMethod below. */
+  password?: string;
   siteId: string;
   employeeCode?: string;
   jobTitle?: string;
@@ -30,7 +31,12 @@ export async function createEmployee(params: CreateEmployeeParams) {
       });
       if (existingMembership) throw new ConflictError("This person is already a member of this organization.");
     } else {
-      const passwordHash = await bcrypt.hash(params.password, PASSWORD_SALT_ROUNDS);
+      // No password => a Google-only account: they sign in with "Continue
+      // with Google" using this exact email, which Auth.js links to this
+      // User row (see the allowDangerousEmailAccountLinking comment in
+      // src/auth.ts). Nobody can sign in until they do that, since there's
+      // no password to fall back to.
+      const passwordHash = params.password ? await bcrypt.hash(params.password, PASSWORD_SALT_ROUNDS) : null;
       user = await tx.user.create({ data: { name: params.name, email: normalizedEmail, passwordHash } });
     }
 
@@ -70,7 +76,8 @@ export interface CreateOrgMemberParams {
   actorUserId: string;
   name: string;
   email: string;
-  password: string;
+  /** Omit to create a Google-only account (see createEmployee's comment on the same pattern). */
+  password?: string;
   role: Exclude<OrgRole, "CLEANER">;
   siteIds?: string[];
 }
@@ -87,7 +94,7 @@ export async function createOrgMember(params: CreateOrgMemberParams) {
       });
       if (existingMembership) throw new ConflictError("This person is already a member of this organization.");
     } else {
-      const passwordHash = await bcrypt.hash(params.password, PASSWORD_SALT_ROUNDS);
+      const passwordHash = params.password ? await bcrypt.hash(params.password, PASSWORD_SALT_ROUNDS) : null;
       user = await tx.user.create({ data: { name: params.name, email: normalizedEmail, passwordHash } });
     }
 

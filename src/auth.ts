@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Nodemailer from "next-auth/providers/nodemailer";
+import Google from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
@@ -46,6 +47,23 @@ if (process.env.EMAIL_SERVER && process.env.EMAIL_FROM) {
     Nodemailer({
       server: process.env.EMAIL_SERVER,
       from: process.env.EMAIL_FROM,
+    }),
+  );
+}
+
+// Google sign-in is opt-in: only registered when OAuth credentials are
+// present (see README "Google Sign-In"). `allowDangerousEmailAccountLinking`
+// is safe here specifically because Google verifies the email during its
+// own OAuth flow — you cannot complete it for an address you don't control.
+// That's what makes "a manager invites worker@gmail.com with no password,
+// the worker later clicks Sign in with Google" resolve to the *same* user
+// instead of a duplicate account.
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
   );
 }

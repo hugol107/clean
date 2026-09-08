@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GoogleIcon } from "@/components/icons/google-icon";
 import { createEmployeeAction } from "@/server/actions/employees";
 import { generateShortCode } from "@/lib/tokens-client";
 
@@ -14,6 +16,7 @@ export function EmployeeForm({ organizationId, sites }: { organizationId: string
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [siteId, setSiteId] = useState(sites[0]?.id ?? "");
+  const [authMethod, setAuthMethod] = useState<"password" | "google">("password");
   const [suggestedPassword] = useState(() => generateShortCode());
 
   function handleSubmit(formData: FormData) {
@@ -21,9 +24,10 @@ export function EmployeeForm({ organizationId, sites }: { organizationId: string
       const result = await createEmployeeAction({
         organizationId,
         siteId,
+        authMethod,
         name: String(formData.get("name") ?? ""),
         email: String(formData.get("email") ?? ""),
-        password: String(formData.get("password") ?? ""),
+        password: authMethod === "password" ? String(formData.get("password") ?? "") : undefined,
         employeeCode: String(formData.get("employeeCode") ?? "") || undefined,
         jobTitle: String(formData.get("jobTitle") ?? "") || undefined,
       });
@@ -52,11 +56,30 @@ export function EmployeeForm({ organizationId, sites }: { organizationId: string
         <Label htmlFor="email">Email (used to sign in)</Label>
         <Input id="email" name="email" type="email" placeholder="maria@cleanco.com" required />
       </div>
+
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Temporary password</Label>
-        <Input id="password" name="password" defaultValue={suggestedPassword} required minLength={8} />
-        <p className="text-xs text-muted-foreground">Share this with the worker — they can sign in on their phone right away.</p>
+        <Label>How will they sign in?</Label>
+        <Tabs value={authMethod} onValueChange={(v) => setAuthMethod(v as "password" | "google")}>
+          <TabsList className="w-full">
+            <TabsTrigger value="password">Password</TabsTrigger>
+            <TabsTrigger value="google" className="gap-1.5">
+              <GoogleIcon className="size-3.5" /> Google account
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {authMethod === "password" ? (
+          <>
+            <Input id="password" name="password" defaultValue={suggestedPassword} required minLength={8} />
+            <p className="text-xs text-muted-foreground">Share this with the worker — they can sign in on their phone right away.</p>
+          </>
+        ) : (
+          <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            No password is set. They sign in with <strong>Continue with Google</strong> using this exact email address — make sure it
+            matches their Google account. Requires Google Sign-In to be configured for this deployment (see README).
+          </p>
+        )}
       </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label>Site</Label>
