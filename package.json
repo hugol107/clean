@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/conditional-prisma-generate.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
