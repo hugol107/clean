@@ -10,14 +10,32 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-function createPrismaClient() {
+function resolveConnectionString(): string {
   // Local/self-hosted Postgres (Docker Compose, Neon, Supabase, RDS...) is
-  // the default -- set DATABASE_URL and it's used as-is. With no
-  // DATABASE_URL at all (e.g. a fresh Netlify deploy that hasn't been given
-  // its own managed Postgres yet), fall back to Netlify's own
-  // auto-provisioned database rather than failing every request.
+  // the default -- set DATABASE_URL and it's used as-is.
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+
+  // No DATABASE_URL at all (e.g. a fresh Netlify deploy that hasn't been
+  // given its own managed Postgres yet): fall back to Netlify's own
+  // auto-provisioned database. getConnectionString() reads NETLIFY_DB_URL
+  // through a Netlify-runtime-specific accessor when one is present, which
+  // in some deployed-function contexts doesn't have this variable wired
+  // through even though it's still sitting in plain process.env -- so try
+  // that directly first, then the official resolver, before giving up.
+  if (process.env.NETLIFY_DB_URL) return process.env.NETLIFY_DB_URL;
+  try {
+    return getConnectionString();
+  } catch (err) {
+    throw new Error(
+      "No database connection available: DATABASE_URL is unset and Netlify's auto-provisioned database could not be resolved.",
+      { cause: err },
+    );
+  }
+}
+
+function createPrismaClient() {
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL || getConnectionString(),
+    connectionString: resolveConnectionString(),
   });
 
   return new PrismaClient({
