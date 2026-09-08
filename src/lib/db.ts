@@ -1,5 +1,6 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { getConnectionString } from "@netlify/database";
 
 // Prisma 7 requires an explicit driver adapter for SQL databases (no bundled
 // engine binary anymore). We keep one PrismaClient per process, cached on
@@ -10,8 +11,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
+  // Local/self-hosted Postgres (Docker Compose, Neon, Supabase, RDS...) is
+  // the default -- set DATABASE_URL and it's used as-is. With no
+  // DATABASE_URL at all (e.g. a fresh Netlify deploy that hasn't been given
+  // its own managed Postgres yet), fall back to Netlify's own
+  // auto-provisioned database rather than failing every request.
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL || getConnectionString(),
   });
 
   return new PrismaClient({

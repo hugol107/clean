@@ -40,6 +40,9 @@ yarn-error.log*
 # netlify
 .netlify
 
+# local Claude Code session state
+/.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
