@@ -14,8 +14,8 @@ export const dynamic = "force-dynamic";
 function OnboardingBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-      <div className="absolute top-[-10rem] left-1/2 h-[28rem] w-[50rem] -translate-x-1/2 rounded-full bg-primary/30 blur-[80px]" />
-      <div className="bg-brand-2/30 absolute right-[-6rem] bottom-[-6rem] h-72 w-72 rounded-full blur-[80px]" />
+      <div className="absolute top-[-8rem] left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/25 blur-[70px] sm:h-80 sm:w-[36rem]" />
+      <div className="bg-brand-2/20 absolute right-[-4rem] bottom-[-4rem] h-48 w-48 rounded-full blur-[70px] sm:h-64 sm:w-64" />
     </div>
   );
 }

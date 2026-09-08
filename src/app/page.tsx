@@ -49,8 +49,8 @@ export default function MarketingPage() {
       <main className="flex-1">
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-            <div className="absolute top-[-12rem] left-1/2 h-[32rem] w-[64rem] -translate-x-1/2 rounded-full bg-primary/35 blur-[90px]" />
-            <div className="bg-brand-2/35 absolute top-[-4rem] right-[8%] h-72 w-72 rounded-full blur-[80px]" />
+            <div className="absolute top-[-8rem] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/25 blur-[80px] sm:h-96 sm:w-[48rem] sm:bg-primary/35 sm:blur-[90px]" />
+            <div className="bg-brand-2/20 absolute top-[-3rem] right-[4%] h-48 w-48 rounded-full blur-[70px] sm:bg-brand-2/35 sm:right-[8%] sm:h-72 sm:w-72 sm:blur-[80px]" />
           </div>
           <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-4 pt-20 pb-16 text-center sm:pt-28">
             <span className="bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium">
